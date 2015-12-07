@@ -9,54 +9,51 @@ library(glmnet)
 require(ggplot2)
 
 #read the data
-opt_digits.dat <- read.table("mnist.csv",header=TRUE, sep = ",")
-opt_digits.dat[, 1] <- as.factor(opt_digits.dat[,1])
+digits <- read.table("mnist.csv",header=TRUE, sep = ",")
+digits[, 1] <- as.factor(digits[,1])
 
-opt_digits.dat <- opt_digits.dat[1:3000,]
+digits <- digits[1:3000,]
 
 
 #create the training/test sample
 smp_size <- 1000
 set.seed(123456)
-train_ind <- sample(seq_len(nrow(opt_digits.dat)), size = smp_size)
+train_ind <- sample(seq_len(nrow(digits)), size = smp_size)
 
 #simple ink model
-ink.dat <- opt_digits.dat[, 1:2]
-ink.dat[,2] <- rowSums(opt_digits.dat[,2:length(opt_digits.dat)])
+ink <- digits[, 1:2]
+ink[,2] <- rowSums(digits[,2:length(digits)])
 
 #scale the ink to 0-1 (kinda)
-ink.dat[,2] <- scale(ink.dat[,2], FALSE, TRUE)
+ink[,2] <- scale(ink[,2], FALSE, TRUE)
 
-ink.training <- ink.dat[train_ind, ]
-ink.testing <- ink.dat[-train_ind, ]
+ink.training <- ink[train_ind, ]
+ink.testing <- ink[-train_ind, ]
 
 #learn the multinom model
-opt_digits.multinom <- multinom(formula = label ~ ., data = ink.training)
-opt_digits.multinom.pred <- predict(opt_digits.multinom, ink.testing)
+ink.multinom <- multinom(formula = label ~ ., data = ink.training)
+ink.multinom.pred <- predict(ink.multinom, ink.testing)
 
 #predictions are on the vertical axis
-print(table(opt_digits.multinom.pred, ink.testing[,1]))
+print(table(ink.multinom.pred, ink.testing[,1]))
 
 
 
 ##hist classification
-size <- sqrt(dim(opt_digits.dat)[2] - 1)
+size <- sqrt(dim(digits)[2] - 1)
+histFeatures <- digits[,1:(2*size + 1)]
 
-histFeatures <- opt_digits.dat[,1:(2*size + 1)]
-
-for(i in 1:dim(opt_digits.dat)[1]){
+for(i in 1:dim(digits)[1]){
   #progress
   if(i %% 1000 == 0){
-    cat(i, dim(opt_digits.dat)[1], "\n")
+    cat(i, dim(digits)[1], "\n")
   }
   
-  localValue <- as.numeric(opt_digits.dat[i, 2:dim(opt_digits.dat)[2]])
+  localValue <- as.numeric(digits[i, 2:dim(digits)[2]])
   
   feature <- rep(0, size * 2 + 1)
   histx <- rep(0, size)
   histy <- rep(0, size)
-  
-  histFeatures[i, 1] <- opt_digits.dat[i, 1]
   
   for(j in 1:length(localValue)){
     col <- 1 + (j - 1) %% size
@@ -76,13 +73,14 @@ histFeatures.training <- histFeatures[train_ind, ]
 histFeatures.testing <- histFeatures[-train_ind, ]
 
 #learn the multinom model
-opt_digits.histdata.multinom <- multinom(formula = label ~ ., data = histFeatures.training)
-opt_digits.histdata.multinom.pred <- predict(opt_digits.histdata.multinom, histFeatures.testing)
+histFeatures.multinom <- multinom(formula = label ~ ., data = histFeatures.training)
+histFeatures.multinom.pred <- predict(histFeatures.multinom, histFeatures.testing)
 
-opt_digits.histdata.multinom.conftable <- table(histFeatures.testing[,1], opt_digits.histdata.multinom.pred)
-print(opt_digits.histdata.multinom.conftable)
+#show the performance
+histFeatures.multinom.conftable <- table(histFeatures.testing[,1], histFeatures.multinom.pred)
+print(histFeatures.multinom.conftable)
 
-
+#ink + hist model
 inkHistFeatures.training <- histFeatures.training
 inkHistFeatures.training["ink"] <- ink.training[,2]
 
@@ -91,26 +89,28 @@ inkHistFeatures.testing["ink"] <- ink.testing[,2]
 
 
 #learn the multinom ink + hist model
-opt_digits.inkHistdata.multinom <- multinom(formula = label ~ ., data = inkHistFeatures.training)
-opt_digits.inkHistdata.multinom.pred <- predict(opt_digits.inkHistdata.multinom, inkHistFeatures.testing)
+inkHistFeatures.multinom <- multinom(formula = label ~ ., data = inkHistFeatures.training)
+inkHistFeatures.multinom.pred <- predict(inkHistFeatures.multinom, inkHistFeatures.testing)
 
-opt_digits.inkHistdata.multinom.conftable <- table(inkHistFeatures.testing[,1], opt_digits.inkHistdata.multinom.pred)
-print(opt_digits.inkHistdata.multinom.conftable)
+inkHistFeatures.multinom.conftable <- table(inkHistFeatures.testing[,1], inkHistFeatures.multinom.pred)
+print(inkHistFeatures.multinom.conftable)
 
-opt_digits.histdata.multinomLasso <- cv.glmnet(as.matrix(histFeatures.training[,-1]), as.matrix(histFeatures.training[,1]), family="multinomial", alpha = 1)
-opt_digits.histdata.multinomLasso.pred <- predict(opt_digits.histdata.multnomLasso, as.matrix(histFeatures.testing[,-1]), type = "class")
+#multinom hist with lassooooooo
+#lambda.min = 0.002509179
+histFeatures.multinomLasso <- cv.glmnet(as.matrix(histFeatures.training[,-1]), as.matrix(histFeatures.training[,1]), family="multinomial", alpha = 1)
+histFeatures.multinomLasso.pred <- predict(histFeatures.multinomLasso, as.matrix(histFeatures.testing[,-1]), type = "class")
 
-opt_digits.histdata.multinom.conftable <- table(histFeatures.testing[,1], opt_digits.histdata.multinomLasso.pred[,1])
-print(opt_digits.histdata.multinom.conftable)
+histFeatures.multinom.conftable <- table(histFeatures.testing[,1], histFeatures.multinomLasso.pred[,1])
+print(histFeatures.multinom.conftable)
 
-#opt_digits.svm.tune <- tune.svm(label ~ ., data = opt_digits.dat, gamma=10^(-6:-1), cost=10^(-1:1))
+#opt_digits.svm.tune <- tune.svm(label ~ ., data = digits, gamma=10^(-6:-1), cost=10^(-1:1))
 #- best parameters:
 #  gamma cost
 #  0.001   10
 #- best performance: 0.4375159 
 
-# data.training <- opt_digits.dat[train_ind, ]
-# data.testing <- opt_digits.dat[-train_ind, ]
+# data.training <- digits[train_ind, ]
+# data.testing <- digits[-train_ind, ]
 # 
 # 
 # opt_digits.svm <- svm(formula = label ~ ., data = data.training, type = "C-classification")#, gamma = 0.001, cost = 10)
