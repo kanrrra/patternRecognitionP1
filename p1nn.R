@@ -24,9 +24,10 @@ features.training <- digits[train_ind, ]
 features.testing <- digits[-train_ind, ]
 
 #learn the nn model
-features.nn <- nnet(formula = label ~ ., data = features.training, size = 10, MaxNWts = 50000)
+features.nn <- nnet(formula = label ~ ., data = features.training, size = 50, MaxNWts = 100000, maxit = 1000)
 features.nn.pred <- predict(features.nn, features.testing, type = "class")
 
 #show the performance
-features.conftable <- table(features.testing[,1], features.nn.pred)
-print(features.conftable)
+features.nn.conftable <- table(features.testing[,1], features.nn.pred)
+print(features.nn.conftable)
+sum(diag(features.nn.conftable))/nrow(features.testing)

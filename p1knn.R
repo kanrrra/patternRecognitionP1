@@ -27,8 +27,8 @@ features.testing <- digits[-train_ind, ]
 
 #learn the multinom model
 features.knn.pred <- knn(train = features.training[,-1], test = features.testing[,-1], cl = features.training[,1], k = 5)
-#features.knn.pred <- predict(features.knn, features.testing)
 
 #show the performance
 features.knn.conftable <- table(features.testing[,1], features.knn.pred)
 print(features.knn.conftable)
+sum(diag(features.knn.conftable))/nrow(features.testing)

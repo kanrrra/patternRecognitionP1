@@ -33,9 +33,11 @@ ink.testing <- ink[-train_ind, ]
 #learn the multinom model
 ink.multinom <- multinom(formula = label ~ ., data = ink.training)
 ink.multinom.pred <- predict(ink.multinom, ink.testing)
+ink.multinom.confTable <- table(ink.multinom.pred, ink.testing[,1])
 
 #predictions are on the vertical axis
-print(table(ink.multinom.pred, ink.testing[,1]))
+print(ink.multinom.confTable)
+sum(diag(ink.multinom.confTable))/nrow(histFeatures.testing)
 
 
 
@@ -79,6 +81,8 @@ histFeatures.multinom.pred <- predict(histFeatures.multinom, histFeatures.testin
 #show the performance
 histFeatures.multinom.conftable <- table(histFeatures.testing[,1], histFeatures.multinom.pred)
 print(histFeatures.multinom.conftable)
+sum(diag(histFeatures.multinom.conftable))/nrow(histFeatures.testing)
+
 
 #ink + hist model
 inkHistFeatures.training <- histFeatures.training
@@ -94,14 +98,16 @@ inkHistFeatures.multinom.pred <- predict(inkHistFeatures.multinom, inkHistFeatur
 
 inkHistFeatures.multinom.conftable <- table(inkHistFeatures.testing[,1], inkHistFeatures.multinom.pred)
 print(inkHistFeatures.multinom.conftable)
+sum(diag(inkHistFeatures.multinom.conftable))/nrow(inkHistFeatures.testing)
 
 #multinom hist with lassooooooo
 #lambda.min = 0.002509179
 histFeatures.multinomLasso <- cv.glmnet(as.matrix(histFeatures.training[,-1]), as.matrix(histFeatures.training[,1]), family="multinomial", alpha = 1)
 histFeatures.multinomLasso.pred <- predict(histFeatures.multinomLasso, as.matrix(histFeatures.testing[,-1]), type = "class")
 
-histFeatures.multinom.conftable <- table(histFeatures.testing[,1], histFeatures.multinomLasso.pred[,1])
-print(histFeatures.multinom.conftable)
+histFeatures.multinomLasso.conftable <- table(histFeatures.testing[,1], histFeatures.multinomLasso.pred[,1])
+print(histFeatures.multinomLasso.conftable)
+sum(diag(histFeatures.multinomLasso.conftable))/nrow(histFeatures.testing)
 
 #opt_digits.svm.tune <- tune.svm(label ~ ., data = digits, gamma=10^(-6:-1), cost=10^(-1:1))
 #- best parameters:

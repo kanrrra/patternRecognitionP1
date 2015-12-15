@@ -29,5 +29,6 @@ features.svm <- svm(formula = label ~ ., data = features.training)
 features.svm.pred <- predict(features.svm, features.testing)
 
 #show the performance
-features.conftable <- table(features.testing[,1], features.svm.pred)
-print(features.conftable)
+features.svm.conftable <- table(features.testing[,1], features.svm.pred)
+print(features.svm.conftable)
+sum(diag(features.svm.conftable))/nrow(features.testing)
