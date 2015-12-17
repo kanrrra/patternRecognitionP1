@@ -25,7 +25,7 @@ train_ind <- sample(seq_len(nrow(digits)), size = smp_size)
 features.training <- digits[train_ind, ]
 features.testing <- digits[-train_ind, ]
 
-#learn the multinom model
+#learn the knn model
 features.knn.pred <- knn(train = features.training[,-1], test = features.testing[,-1], cl = features.training[,1], k = 5)
 
 #show the performance

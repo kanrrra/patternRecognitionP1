@@ -19,12 +19,12 @@ smp_size <- 1000
 set.seed(123456)
 train_ind <- sample(seq_len(nrow(digits)), size = smp_size)
 
-#knn
+#nn
 features.training <- digits[train_ind, ]
 features.testing <- digits[-train_ind, ]
 
 #learn the nn model
-features.nn <- nnet(formula = label ~ ., data = features.training, size = 50, MaxNWts = 100000, maxit = 1000)
+features.nn <- nnet(formula = label ~ ., data = features.training, size = 20, MaxNWts = 100000, maxit = 200, decay = 5e-3)
 features.nn.pred <- predict(features.nn, features.testing, type = "class")
 
 #show the performance

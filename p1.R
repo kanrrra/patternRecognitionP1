@@ -12,9 +12,6 @@ require(ggplot2)
 digits <- read.table("mnist.csv",header=TRUE, sep = ",")
 digits[, 1] <- as.factor(digits[,1])
 
-digits <- digits[1:3000,]
-
-
 #create the training/test sample
 smp_size <- 1000
 set.seed(123456)
@@ -33,11 +30,11 @@ ink.testing <- ink[-train_ind, ]
 #learn the multinom model
 ink.multinom <- multinom(formula = label ~ ., data = ink.training)
 ink.multinom.pred <- predict(ink.multinom, ink.testing)
-ink.multinom.confTable <- table(ink.multinom.pred, ink.testing[,1])
+ink.multinom.confTable <- table(ink.testing[,1], ink.multinom.pred)
 
-#predictions are on the vertical axis
+#predictions are not on the vertical axis
 print(ink.multinom.confTable)
-sum(diag(ink.multinom.confTable))/nrow(histFeatures.testing)
+sum(diag(ink.multinom.confTable))/nrow(ink.testing)
 
 
 
@@ -100,14 +97,20 @@ inkHistFeatures.multinom.conftable <- table(inkHistFeatures.testing[,1], inkHist
 print(inkHistFeatures.multinom.conftable)
 sum(diag(inkHistFeatures.multinom.conftable))/nrow(inkHistFeatures.testing)
 
+
+
+features.training <- digits[train_ind, ]
+features.testing <- digits[-train_ind, ]
+
+
 #multinom hist with lassooooooo
 #lambda.min = 0.002509179
-histFeatures.multinomLasso <- cv.glmnet(as.matrix(histFeatures.training[,-1]), as.matrix(histFeatures.training[,1]), family="multinomial", alpha = 1)
-histFeatures.multinomLasso.pred <- predict(histFeatures.multinomLasso, as.matrix(histFeatures.testing[,-1]), type = "class")
+features.multinomLasso <- cv.glmnet(as.matrix(features.training[,-1]), as.matrix(features.training[,1]), family="multinomial", alpha = 1)
+features.multinomLasso.pred <- predict(features.multinomLasso, as.matrix(features.testing[,-1]), type = "class")
 
-histFeatures.multinomLasso.conftable <- table(histFeatures.testing[,1], histFeatures.multinomLasso.pred[,1])
-print(histFeatures.multinomLasso.conftable)
-sum(diag(histFeatures.multinomLasso.conftable))/nrow(histFeatures.testing)
+features.multinomLasso.conftable <- table(features.testing[,1], features.multinomLasso.pred[,1])
+print(features.multinomLasso.conftable)
+sum(diag(features.multinomLasso.conftable))/nrow(features.testing)
 
 #opt_digits.svm.tune <- tune.svm(label ~ ., data = digits, gamma=10^(-6:-1), cost=10^(-1:1))
 #- best parameters:

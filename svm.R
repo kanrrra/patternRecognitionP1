@@ -25,7 +25,7 @@ features.testing <- digits[-train_ind, ]
 
 #learn the svm model
 #svm.tune <- tune.svm(label ~ ., data = features.training, gamma=10^(-6:-1), cost=10^(-1:1))
-features.svm <- svm(formula = label ~ ., data = features.training)
+features.svm <- svm(formula = label ~ ., data = features.training, type = "C-classification", gamma = 0.001, cost = 10)
 features.svm.pred <- predict(features.svm, features.testing)
 
 #show the performance
